@@ -1,0 +1,11 @@
+{
+  "name": "node-trackvia",
+  "version": "0.0.0",
+  "description": "",
+  "main": "trackvia.js",
+  "author": "dhcole",
+  "license": "none",
+  "dependencies": {
+    "request": "^2.40.0"
+  }
+}
