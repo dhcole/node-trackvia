@@ -22,8 +22,8 @@ var trackvia = function(options) {
    *  #authenticate(callback) -> null
    *    - callback (Function): Runs with arguments error, and response data
    *
-   *  Authenticates into the API and saves access_token: http://www.trackvia.com/overview/trackvia-api/#authentication
-   *  TODO: refresh_token
+   *  Authenticates into the API and saves access_token:
+   *  http://www.trackvia.com/overview/trackvia-api/#authentication
    **/
   this.authenticate = function(callback) {
     var config = this.config;
@@ -180,20 +180,42 @@ var trackvia = function(options) {
   };
 
   /**
-   *  #records(id, callback) -> null
-   *    - id (String): id of record to load.
+   *  #records(options, callback) -> null
+   *    - options (Object) OR id (String): Options object OR id of record
+   *        - id (String): id of record to load, update, or delete.
+   *        - method (String): GET, POST, PUT, or DELETE for get, add, update, or delete operations
+   *        - table_id (String): id of table for add or batch operations
+   *        - data (Array OR Object): data for add, update, or batch operations
+   *    - callback (Function): Called after request completes (error, response)
    *    - callback (Function): Called after request completes (error, response)
    *
    *  Records endpoint: http://www.trackvia.com/overview/trackvia-api/#records
-   *  TODO: insert, update, delete methods
    **/
-  this.records = function(id, callback) {
-    if (!id || (typeof id !== 'string' && typeof id !== 'number'))
-      throw new Error('`records` endpoint requires an `id`');
+  this.records = function(opts, callback) {
+    if (!opts)
+      throw new Error('`records` endpoint requires an `options` object or `id');
+
+    if (typeof opts === 'string' || typeof opts === 'number')
+      opts = { id: opts };
 
     var options = {
-      endpoint: 'records/' + id
+      method: (opts.method || 'GET').toUpperCase()
     };
+
+    if (options.method === 'GET' || (!opts.table_id && !opts.data)) {
+      options.endpoint = 'records/' + opts.id;
+    } else if (opts.data && !opts.table_id) {
+      options.endpoint = 'records/' + opts.id;
+      options.headers = { 'Content-Type': 'application/json' };
+      options.body = JSON.stringify(opts.data);
+    } else {
+      options.endpoint = 'records';
+      options.headers = { 'Content-Type': 'application/json' };
+      options.body = JSON.stringify({
+        table_id: opts.table_id,
+        records: opts.data
+      });
+    }
 
     this.request(options, callback);
   };
